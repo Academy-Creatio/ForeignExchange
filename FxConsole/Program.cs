@@ -9,7 +9,7 @@ namespace FxConsole
     {
         static async Task Main(string[] args)
         {
-            DateTime date = new DateTime(2020, 5, 21);
+            DateTime date = new DateTime(2020, 7, 23);
 
             Task BOC = RateBOC("USD", date);
             Task ECB = RateECB("USD", date);

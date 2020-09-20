@@ -65,7 +65,7 @@ namespace ForeignExchange
                 RateDate = date
             };
             if (date < minDate)
-                return Task.FromResult(emptyResult);
+                throw new ArgumentOutOfRangeException("date", "Date must be greater than 01-Jan-2018");
 
             if(!SupportedCurrencies.ContainsKey(currency))
                 throw new NotImplementedException($"{bankName} does not support {currency}");
