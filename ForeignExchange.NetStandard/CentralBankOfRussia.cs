@@ -13,6 +13,18 @@ namespace ForeignExchange
 		#region Constants
 		private const string homeCurrency = "RUB";
 		private const string bankName = "Central bank of the Russian Federation";
+
+		#endregion
+
+		#region Fields
+		private static readonly DateTime minDate = new DateTime(1992, 7, 1);
+		private readonly static IBankResult bankResult = new BankResult()
+		{
+			ExchangeRate = -1m,
+			RateDate = DateTime.Now,
+			HomeCurrency = homeCurrency,
+			BankName = bankName
+		};
 		#endregion
 
 		#region Properties
@@ -59,16 +71,13 @@ namespace ForeignExchange
 		public async Task<IBankResult> GetRateAsync(string currency, DateTime date)
 		{
 			if (!SupportedCurrencies.ContainsKey(currency))
-				throw new NotImplementedException($"{bankName} does not support {currency}");
-
-			IBankResult bankResult = new BankResult()
 			{
-				ExchangeRate = -1m,
-				RateDate = date,
-				HomeCurrency = homeCurrency,
-				BankName = bankName
-			};
-
+				throw new NotImplementedException($"{bankName} does not support {currency}");
+			}
+			if (date < minDate)
+			{
+				throw new ArgumentOutOfRangeException("date", $"Date must be greater than {minDate:dd-MMM-yyyy}");
+			}
 			BasicHttpBinding binding = new BasicHttpBinding();
 			EndpointAddress endPointAddress = new EndpointAddress("http://www.cbr.ru/DailyInfoWebServ/DailyInfo.asmx");
 			DailyInfoSoap client = new DailyInfoSoapClient(binding, endPointAddress);
@@ -77,9 +86,8 @@ namespace ForeignExchange
 			var valuesNode = fxRates.Nodes
 				.Where(n => n.Name.LocalName == "diffgram").FirstOrDefault().Elements()
 				.Where(e => e.Name == "ValuteData").Elements("ValuteCursOnDate")
-				.Where(ee => ee.Elements("VchCode").FirstOrDefault().Value.Trim() == "USD").FirstOrDefault();
+				.Where(ee => ee.Elements("VchCode").FirstOrDefault().Value.Trim() == currency).FirstOrDefault();
 
-			//Console.WriteLine(valuesNode.Elements("Vcurs").FirstOrDefault().Value.Trim());
 			if (!valuesNode.IsEmpty)
 			{
 				string Vnom = valuesNode.Elements("Vnom").FirstOrDefault().Value.Trim();
@@ -89,9 +97,10 @@ namespace ForeignExchange
 				decimal.TryParse(Vnom, out decimal multiplier);
 				decimal.TryParse(Vcurs, out decimal rate);
 				decimal resultFxRate = rate / (multiplier == 0 ? 1: multiplier);
+
+				bankResult.RateDate = date;
 				bankResult.ExchangeRate = resultFxRate;
 			}
-
 			return bankResult;
 		}
 		#endregion

@@ -3,13 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="favicon.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="favicon.ico" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.23" />
